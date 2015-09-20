@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd">
+	
+	<description>所有Spring配置文件的集合(官方推荐使用相对路径)</description>
+	<import resource="spring-mvc.xml" />
+	<import resource="spring-job.xml" />
+    <import resource="dataSource.xml" />
+    <import resource="activemq-jms.xml" />
+	<import resource="spring-webserviceServer.xml" />
+	<!--<import resource="spring-mybatis.xml" />-->
+	
+</beans>
+

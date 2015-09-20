@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.1.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd">
+
+	<context:property-placeholder location="classpath:system.properties,classpath:jms.properties" />
+	<context:component-scan base-package="com.yuncia.wechat" />
+    <mvc:resources mapping="/static/**" location="/static/" />
+    <mvc:resources mapping="/ckeditor4.4.0/**" location="/ckeditor4.4.0/" />
+    <mvc:resources mapping="/ckfinder2.5.0/**" location="/ckfinder2.5.0/" />
+	<!-- 文件上传下载路径 服务器-->
+    <mvc:resources mapping="/CKFinderJava/**" location="/CKFinderJava/" />
+
+	<mvc:annotation-driven>
+		<mvc:message-converters>
+			<bean id="stringHttpMessageConverter"
+				class="org.springframework.http.converter.StringHttpMessageConverter">
+				<constructor-arg value="UTF-8" />
+			</bean>
+		</mvc:message-converters>
+	</mvc:annotation-driven>
+	<!--静态资源 <mvc:resources mapping="/**" location="/"/> -->
+
+	<util:map id="serviceMap" key-type="com.yuncia.wechat.pojo.wechat.MessageType"
+		value-type="com.yuncia.wechat.service.client.event.WeChatService">
+		<description>处理来自微信客户端的接收信息触发请求</description>
+		<!--<entry key="text" value-ref="textServiceImpl" />-->
+        <entry key="event" value-ref="baseEventServiceImpl" />
+	</util:map>
+    <util:map id="eventServiceMap" key-type="com.yuncia.wechat.pojo.wechat.xml.event.EventType"
+              value-type="com.yuncia.wechat.service.client.event.WeChatService">
+        <description>处理来自微信客户端的事件推送的触发请求</description>
+        <entry key="CLICK" value-ref="menuClickEventServiceImpl" />
+        <entry key="subscribe" value-ref="otherEventServiceImpl" />
+    </util:map>
+
+	<!-- JSP -->
+	<!--<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.JstlView" />
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<property name="order" value="1" />
+		<property name="viewNames" value="*.jsp" />
+	</bean>-->
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver"
+          p:prefix="/"  p:suffix=".jsp" />
+	<!-- Spring 统一日志处理   LogInterceptor拦截器 配置　-->
+	<bean id="logLnterceptor" class="com.yuncia.wechat.web.exception.LogInterceptor"/>
+	<!-- Spring 统一异常处理  ExceptionAdvisor配置 -->
+	<bean id="exceptionHandler" class="com.yuncia.wechat.web.exception.ExceptionAdvisor"></bean>
+
+	<!-- Bean自动代理处理器 配置-->
+	<bean class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator" >
+		<property name="beanNames">
+			<list>	<!-- 配置需要进行日志记录的Service和Dao -->
+				<value>*Dao</value>
+				<value>*Controller</value>
+				<!-- 配置所有Service结尾命名的Bean，即所有Service层的类都要经过exceptionHandler异常处理类 -->
+				<value>*Service</value>  <!-- Service层的Bean ID 命名要以Service结尾 -->
+			</list>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>exceptionHandler</value>
+				<value>logLnterceptor</value>
+				<!--<value>transactionInterceptor</value>-->
+			</list>
+		</property>
+	</bean>
+
+
+	<!--拦截器 <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"> 
+		<property name="order" value="1"/> <property name="interceptors"> <list> 
+		<bean id="officeHoursInterceptor" class="cn.kabin.interceptor.MyInterceptor"> 
+		<property name="num" value="998" /> </bean> </list> </property> </bean> <bean 
+		class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter"> 
+		<property name="ignoreDefaultModelOnRedirect" value="true"/> </bean> -->
+	<!--拦截器 <bean id="handlerMapping" class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"> 
+		<property name="order" value="1"/> <property name="interceptors"> <list> 
+		<ref bean="officeHoursInterceptor" /> </list> </property> </bean> -->
+
+
+	<!--全局拦截器？ <mvc:interceptors> <mvc:interceptor> <mvc:mapping path="/**"/> 
+		<bean id="officeHoursInterceptor" class="cn.kabin.interceptor.MyInterceptor"> 
+		<property name="num" value="998" /> </bean> </mvc:interceptor> </mvc:interceptors> -->
+	<!--文件上传 <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"> 
+		one of the properties available; the maximum file size in bytes <property 
+		name="maxUploadSize" value="100000" /> </bean> -->
+
+	<bean id="springContextUtil" class="com.yuncia.wechat.util.SpringContextUtil"></bean>
+</beans>

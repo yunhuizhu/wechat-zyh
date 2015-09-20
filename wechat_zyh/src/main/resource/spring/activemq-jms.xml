@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <!-- 真正可以产生Connection的ConnectionFactory，由对应的 JMS服务厂商提供-->
+    <!--使用连接池后，假如mq服务器关闭 必须重启所以监听服务器。暂时无法解决，所以去掉MQ连接池。-->
+    <!--<bean id="targetConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">-->
+    <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="${jms.brokerURL}"/>
+    </bean>
+
+    <!--<bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">-->
+    <!--<property name="connectionFactory" ref="targetConnectionFactory"/>-->
+    <!--<property name="maxConnections" value="${jms.maxConnections}"/>-->
+    <!--<property name="idleTimeout" value="30000"/>-->
+    <!--<property name="expiryTimeout" value="60000"/>-->
+    <!--</bean>-->
+
+    <!--<bean id="connectionFactory" class="org.springframework.jms.connection.SingleConnectionFactory">-->
+    <!--<property name="targetConnectionFactory" ref="pooledConnectionFactory"/>-->
+    <!--</bean>-->
+    <!--<bean id="jmsAcceptBackService" class="com.chinaweal.aicscr.jms.service.impl.JmsAcceptBackServiceImpl"/>-->
+    <!-- Spring提供的JMS工具类，它可以进行消息发送、接收等 -->
+    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="connectionFactory"/>
+    </bean>
+
+
+    <!--这个是sessionAwareQueue目的地-->
+    <bean id="sessionAwareQueue" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg>
+            <value>sessionAwareQueue</value>
+        </constructor-arg>
+    </bean>
+
+    <!--一个点配置一个-->
+    <bean id="sessionAwareQueue440000" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg>
+            <value>sessionAwareQueue440000</value>
+        </constructor-arg>
+        <property name="physicalName" value="PROVINCENAME-440000"/>
+    </bean>
+
+    <bean id="awareQueueMessageListener-440000"
+          class="com.yuncia.wechat.jms.listener.AwareQueueMessageListener440000">
+        <property name="destination" ref="sessionAwareQueue440000"/>
+        <!--<property name="messageHandleService" ref="jmsAcceptBackService"/>-->
+    </bean>
+
+
+    <bean id="sessionAwareListenerContainer-440000"
+          class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="destination" ref="sessionAwareQueue440000"/>
+        <property name="messageListener" ref="awareQueueMessageListener-440000"/>
+        <property name="sessionTransacted" value="true"/>
+    </bean>
+
+
+
+</beans>
